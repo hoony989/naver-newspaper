@@ -1,0 +1,8 @@
+{
+  "name": "wave_graph_example",
+  "waves": [
+    {"name": "Wave 1", "description": "Discovery (completed)", "tasks": ["scan_files", "env_scan"]},
+    {"name": "Wave 2", "description": "Planning & scaffolding", "tasks": ["design_plan", "setup_interfaces"]},
+    {"name": "Wave 3", "description": "Prototype scaffold", "tasks": ["plan.py", "runner.py", "env_loader.py"]}
+  ]
+}

@@ -1,0 +1,24 @@
+# Wave 2 Plan: Ultrawork Orchestration Prototyping
+
+- Objective: Finalize an explicit Ultrawork orchestration design and a concrete Wave graph to enable rapid prototyping in Wave 3. Include dependencies, a rollback plan, and clear wave sequencing.
+- Orchestration design (core components)
+  - PlanManager: central API to register, retrieve, and list waves/plans
+  - ParallelRunner: lightweight parallel executor to run independent tasks concurrently
+  - EnvLoader: simple environment configuration loader with optional .env support; basic validation
+- Waves and sequencing
+  - Wave 1: Discovery and environment assessment (completed)
+  - Wave 2: Planning and scaffolding design (finalize interfaces, dependencies, rollback)
+  - Wave 3: Prototype scaffolding (code skeleton + minimal parallel demo)
+- Dependencies
+  - Language: Python 3.8+
+  - Testing: pytest
+- Rollback plan
+  - If Wave 2 changes fail to integrate, revert to the last stable skeleton and sustain a minimal plan doc to guide the next sprint
+- Blockers / Input
+  - Language choice confirmation (Python confirmed; Node.js optional later)
+- Acceptance criteria
+  - Plan document is unambiguous and actionable
+  - Wave 3 skeleton compiles and runs a 3-task parallel demo
+- Deliverables
+  - Wave 2 plan document
+  - Skeleton and tests

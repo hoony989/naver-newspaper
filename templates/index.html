@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE NAVER DAILY</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Lora:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f4f1ea;
+            font-family: 'Lora', serif;
+            color: #1a1a1a;
+        }
+        h1, h2, h3, .masthead {
+            font-family: 'Playfair Display', serif;
+        }
+        .newspaper-border {
+            border-top: 4px solid #1a1a1a;
+            border-bottom: 1px solid #1a1a1a;
+        }
+        .column-rule {
+            column-rule: 1px solid #1a1a1a;
+        }
+        .drop-cap::first-letter {
+            float: left;
+            font-size: 4rem;
+            line-height: 3.5rem;
+            padding-right: 8px;
+            padding-top: 4px;
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+        }
+        .vintage-input {
+            background-color: transparent;
+            border-bottom: 2px solid #1a1a1a;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+        }
+        .vintage-input:focus {
+            outline: none;
+            border-bottom-color: #4a4a4a;
+        }
+        .newspaper-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+        @media (max-width: 1024px) {
+            .newspaper-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 640px) {
+            .newspaper-grid { grid-template-columns: 1fr; }
+        }
+        .article {
+            border-bottom: 1px solid #1a1a1a;
+            padding-bottom: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .article:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-6xl md:text-8xl font-black uppercase tracking-tighter mb-4">THE NAVER DAILY</h1>
+            <div class="newspaper-border py-1 flex justify-between items-center text-sm md:text-base font-bold uppercase">
+                <span>SEOUL, KOREA</span>
+                <span id="current-date">WEDNESDAY, JANUARY 28, 2026</span>
+                <span>PRICE: 25 CENTS</span>
+            </div>
+        </header>
+
+        <div class="flex flex-col md:flex-row gap-6 items-center justify-center mb-6 py-6 border-b-2 border-double border-black">
+            <input type="text" id="query" value="ax ai" placeholder="ENTER TOPIC..." 
+                   class="vintage-input text-2xl w-full md:w-96 py-1 px-2 uppercase italic">
+            <div class="flex flex-wrap gap-4 justify-center">
+                <button onclick="crawlNews()" id="crawlBtn"
+                        class="border-2 border-black px-6 py-2 font-bold uppercase hover:bg-black hover:text-[#f4f1ea] transition duration-300 bg-white">
+                    Fetch Latest News (뉴스 가져오기)
+                </button>
+                <button onclick="downloadResults()" id="downloadBtn" 
+                        class="border-2 border-black px-6 py-2 font-bold uppercase hover:bg-black hover:text-[#f4f1ea] transition duration-300 bg-white">
+                    Download TXT (텍스트 다운로드)
+                </button>
+                <button onclick="downloadWord()" id="wordBtn" 
+                        class="border-2 border-black px-6 py-2 font-bold uppercase hover:bg-black hover:text-[#f4f1ea] transition duration-300 bg-white">
+                    Download Word (워드 다운로드)
+                </button>
+                <button onclick="sendEmail()" id="emailBtn" 
+                        class="border-2 border-black px-6 py-2 font-bold uppercase hover:bg-black hover:text-[#f4f1ea] transition duration-300 bg-white">
+                    Send Email (메일 발송)
+                </button>
+            </div>
+        </div>
+
+        <div class="max-w-md mx-auto mb-8 p-4 border border-black bg-[#efece4] flex flex-col gap-2">
+            <label class="text-sm font-bold uppercase tracking-widest">Recipient Email Setting</label>
+            <div class="flex gap-2">
+                <input type="email" id="recipientEmail" placeholder="ENTER EMAIL ADDRESS..." 
+                       class="flex-1 bg-transparent border-b border-black text-sm py-1 px-2 italic focus:outline-none">
+                <button onclick="saveEmail()" class="text-xs font-bold uppercase border border-black px-3 py-1 hover:bg-black hover:text-white transition">Save</button>
+            </div>
+            <p id="emailStatus" class="text-[10px] italic text-gray-600 uppercase"></p>
+        </div>
+
+        <div id="loading" class="hidden text-center py-12">
+            <p class="text-2xl italic animate-pulse">Teletype printing in progress...</p>
+        </div>
+
+        <section id="headMessageContainer" class="hidden max-w-4xl mx-auto mb-12">
+            <div class="relative p-8 border-4 border-double border-black bg-[#efece4] shadow-sm">
+                <h3 class="text-center font-black uppercase tracking-widest mb-4 border-b border-black pb-2">Editorial Summary</h3>
+                <div id="headMessage" class="text-lg italic leading-relaxed text-justify whitespace-pre-line font-serif">
+                </div>
+            </div>
+        </section>
+
+        <main id="newsGrid" class="newspaper-grid hidden">
+        </main>
+    </div>
+
+    <script>
+        let currentResults = [];
+
+        // Update Date
+        function updateDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', options).toUpperCase();
+        }
+        updateDate();
+
+        // Email Settings Logic
+        function saveEmail() {
+            const email = document.getElementById('recipientEmail').value;
+            if (email) {
+                localStorage.setItem('naverDailyRecipient', email);
+                document.getElementById('emailStatus').textContent = 'Email Saved Successfully.';
+                setTimeout(() => document.getElementById('emailStatus').textContent = '', 3000);
+            }
+        }
+
+        function loadEmail() {
+            const savedEmail = localStorage.getItem('naverDailyRecipient');
+            if (savedEmail) {
+                document.getElementById('recipientEmail').value = savedEmail;
+            }
+        }
+        loadEmail();
+
+        async function crawlNews() {
+            const query = document.getElementById('query').value;
+            const crawlBtn = document.getElementById('crawlBtn');
+            const loading = document.getElementById('loading');
+            const grid = document.getElementById('newsGrid');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const emailBtn = document.getElementById('emailBtn');
+
+            crawlBtn.disabled = true;
+            loading.classList.remove('hidden');
+            grid.classList.add('hidden');
+            grid.innerHTML = '';
+            document.getElementById('headMessageContainer').classList.add('hidden');
+
+            try {
+                const formData = new FormData();
+                formData.append('query', query);
+
+                const response = await fetch('/crawl', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                currentResults = data.results;
+                const headMessage = data.head_message;
+                
+                if (currentResults.length > 0) {
+                    const headContainer = document.getElementById('headMessageContainer');
+                    const headContent = document.getElementById('headMessage');
+                    headContent.textContent = headMessage;
+                    headContainer.classList.remove('hidden');
+
+                    currentResults.forEach((item, index) => {
+                        const article = document.createElement('article');
+                        article.className = 'article';
+                        
+                        const snippetClass = 'text-justify leading-relaxed';
+                        
+                        article.innerHTML = `
+                            <h2 class="text-2xl font-bold leading-tight mb-2 hover:italic">
+                                <a href="${item.link}" target="_blank">${item.title}</a>
+                            </h2>
+                            <p class="${snippetClass}">
+                                ${item.snippet}
+                            </p>
+                        `;
+                        grid.appendChild(article);
+                    });
+                    grid.classList.remove('hidden');
+                } else {
+                    alert('No bulletins found for this topic.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('A fault occurred in the teletype transmission.');
+            } finally {
+                crawlBtn.disabled = false;
+                loading.classList.add('hidden');
+            }
+        }
+
+        async function sendEmail() {
+            if (currentResults.length === 0) {
+                alert('가져온 뉴스가 없습니다. 먼저 "Fetch Latest News" 버튼을 눌러주세요.');
+                return;
+            }
+            const email = localStorage.getItem('naverDailyRecipient');
+            if (!email) {
+                alert('Please set and save the recipient email first.');
+                return;
+            }
+
+            const query = document.getElementById('query').value;
+            const emailBtn = document.getElementById('emailBtn');
+            emailBtn.disabled = true;
+            emailBtn.textContent = 'Sending...';
+
+            try {
+                const response = await fetch('/send_email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        email: email,
+                        query: query,
+                        results: currentResults,
+                        head_message: document.getElementById('headMessage').textContent
+                    })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert('Edition sent successfully via teletype!');
+                } else {
+                    alert('Failed to send: ' + result.error);
+                }
+            } catch (error) {
+                alert('Connection error occurred during transmission.');
+            } finally {
+                emailBtn.disabled = false;
+                emailBtn.textContent = 'Send Email';
+            }
+        }
+
+        async function downloadResults() {
+            if (currentResults.length === 0) {
+                alert('가져온 뉴스가 없습니다. 먼저 "Fetch Latest News" 버튼을 눌러주세요.');
+                return;
+            }
+            const query = document.getElementById('query').value;
+            try {
+                const response = await fetch('/download', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query, results: currentResults })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+                    a.download = `NAVER_DAILY_${timestamp}.txt`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                }
+            } catch (error) {
+                alert('Failed to archive the edition.');
+            }
+        }
+
+        async function downloadWord() {
+            if (currentResults.length === 0) {
+                alert('가져온 뉴스가 없습니다. 먼저 "Fetch Latest News" 버튼을 눌러주세요.');
+                return;
+            }
+            const query = document.getElementById('query').value;
+            try {
+                const response = await fetch('/download_word', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        query: query, 
+                        results: currentResults,
+                        head_message: document.getElementById('headMessage').textContent
+                    })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+                    a.download = `NAVER_DAILY_${timestamp}.docx`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                }
+            } catch (error) {
+                alert('Failed to archive the Word edition.');
+            }
+        }
+    </script>
+</body>
+</html>

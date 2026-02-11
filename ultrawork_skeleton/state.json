@@ -1,0 +1,1 @@
+{"plans": {"demo_extended": {"description": "End-to-end extended Wave demo", "waves": [{"name": "Wave 1", "description": "Discovery (demo)", "tasks": ["discover-a", "discover-b"]}, {"name": "Wave 2", "description": "Planning (demo)", "tasks": ["plan-a", "plan-b"]}, {"name": "Wave 3", "description": "Prototype (demo)", "tasks": ["proto-a", "proto-b"]}]}}}

@@ -143,7 +143,15 @@ def generate_head_message(results):
 @app.route('/crawl', methods=['POST'])
 def crawl():
     query = request.form.get('query', 'ax ai')
-    results = crawl_naver_news(query)
+    try:
+        limit = int(request.form.get('limit', 50))
+    except (ValueError, TypeError):
+        limit = 50
+    
+    # Enforce limit between 10 and 100
+    limit = max(10, min(limit, 100))
+        
+    results = crawl_naver_news(query, max_items=limit)
     head_message = generate_head_message(results)
     return jsonify({
         'results': results,
